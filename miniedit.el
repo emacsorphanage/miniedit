@@ -1,17 +1,17 @@
-;;; miniedit.el--- enhanced editing for minibuffer-fields.
-;; Time-stamp: <2002-11-11 17:42:38 deego>
+;;; miniedit.el --- Enhanced editing for minibuffer fields.
+;; Time-stamp: <2010-04-06 19:05:08 deego>
 ;; Copyright (C) 2001, 2002 Free Software Foundation, Inc.
 ;; Emacs Lisp Archive entry
 ;; Filename: miniedit.el
 ;; Package: miniedit
-;; Author(s): Deepak Goel <deego@glue.umd.edu>,
-;;            Christoph Conrad < christoph.conrad@gmx.de>
-;; Version: 1.9dev
-;; Author's homepage: http://www.glue.umd.edu/~deego
+;; Author(s): Deepak Goel <deego3@gmail.com>,
+;;            Christoph Conrad <christoph.conrad@gmx.de>
+;; Version: 2.0
+;; Author's homepage: http://www.gnufans.net/~deego/DeegoWiki/DeepakGoel.html
 ;; For latest version:
 
 (defconst miniedit-home-page
-  "http://www.glue.umd.edu/~deego/emacspub/lisp-mine/miniedit/")
+  "http://gnufans.net/~deego/emacspub/lisp-mine/miniedit/")
 ;; This file is NOT (yet) part of GNU Emacs.
  
 ;; This is free software; you can redistribute it and/or modify
@@ -35,13 +35,16 @@
 
 ;; Quick start:
 (defconst miniedit-quick-start
-  "Drop file somewhere in your load-path, and add somewhere in your  .emacs.
+  "Drop this file somewhere in your load-path, and add somewhere in your  .emacs.
  \(require 'miniedit\)
  \(miniedit-install\)
 Xemacsers use \(miniedit-install-for-xemacs\) instead of
 \(miniedit-install\).
+
+Installation can also be done by customizing the variable `miniedit-install'.
+
 Then, type M-C-e in any minibuffer to do nicer edits, and type M-C-c
-or C-c C-c when done. 
+or C-c C-c when done.
 
 Please type M-x miniedit-introduction, M-x miniedit-quick-start and
 M-x miniedit-commentary for more details. "
@@ -58,20 +61,19 @@ M-x miniedit-commentary for more details. "
 ;; Stuff that gets posted to gnu.emacs.sources
 ;; as introduction
 (defconst miniedit-introduction
-  "Adds a key \"C-M-e\" \(e for edit\) to the minibuffer-local-map, and
-other similar maps, and binds it to the function miniedit.  This
-means that when you are in a minibuffer, trying to enter something,
-you can type C-M-e to go enter those fields in a nice full buffer
+  "Helps easily edit minibuffers.
+Adds a key \"C-M-e\" \(e for edit\) to the minibuffer-local-map, and
+other similar maps, and bind it to the function `miniedit'. This
+means that when you are in a minibuffer, trying to input text,
+you can type C-M-e to go enter those fields in a nice, full buffer
 \(with text mode\) instead.  In particular, inserting new lines and
-indenting is easy..  Helpful, for instance, when editing bbdb notes
+indenting is easy.  Helpful, for instance, when editing bbdb notes
 fields, which tend to be multiline, \(right?\)
 
-PS: Lots of code borrowed from checkdoc..
-Comments, patches, and more features welcome :\)
- 
+P.S.: Lots of code borrowed from checkdoc.
 
-Tested mainly on emacs21.  Now, it may work even on Xemacs for atleast
-for some of the minibuffer-maps.
+Tested mainly on emacs21.  It may now work even on Xemacs, `
+atleast for some of the minibuffer-maps.
 
 Please type M-x miniedit-introduction, M-x miniedit-quick-start and
 M-x miniedit-commentary for more details. ")
@@ -83,39 +85,7 @@ M-x miniedit-commentary for more details. ")
   (with-electric-help
    '(lambda () (insert miniedit-introduction) nil) "*doc*"))
 
-;;; Commentary:
-(defconst miniedit-commentary
-  "Type M-x miniedit-introduction.
-   Hint to remembering keys:
-I think of C-M-e as edit and C-M-c or C-c C-c as commit.. any others?
-"
-)
-
-;;;###autoload
-(defun miniedit-commentary ()
-  "Provides electric help for function `miniedit-commentary'."
-  (interactive)
-  (with-electric-help
-   '(lambda () (insert miniedit-commentary) nil) "*doc*"))
-
-;;; History:
-
-;;; New features:
-(defconst miniedit-new-features
-  "
-
-Thanks to Alex Schroeder for suggestign C-c C-c to end recursive
-edits. 
-")
-
-;;;###autoload
-(defun miniedit-new-features ()
-  "Provides electric help for function `miniedit-new-features'."
-  (interactive)
-  (with-electric-help
-   '(lambda () (insert miniedit-new-features) nil) "*doc*"))
-
-(defvar miniedit-version "1.9dev")
+(defvar miniedit-version "2.0")
 
 ;;; BUGS:
 ;;   Commit problem:  Once you are in the miniedit buffer, if you move
@@ -123,7 +93,7 @@ edits.
 ;;   fails.. the author is working on this.... :)
 ;;   that is why we kill-new and have variables like
 ;;   miniedit-before-edit-kill-p and miniedit-after-edit-kill-p. -- to
-;;   save any lost data. 
+;;   save any lost data.
 ;;==========================================
 ;;; code:
 (eval-when-compile (require 'custom))
@@ -133,6 +103,18 @@ edits.
 (defgroup miniedit nil
   "Miniedit"
   :group 'applications)
+
+(defcustom miniedit-install-p nil
+  "Whether to setup miniedit for use."
+  :type 'boolean
+  :set (lambda (symbol value)
+         (set-default symbol value)
+         (when value
+           (if (string-match "XEmacs" emacs-version)
+               (miniedit-install-for-xemacs)
+             (miniedit-install))))
+  :require 'miniedit
+  :group 'miniedit)
 
 (defcustom miniedit-before-edit-kill-p nil
   "Add to kill ring before starting edit?"
@@ -208,7 +190,7 @@ Caution: var-capture by its very nature.."
   (princ "\n"))
 
 (defcustom miniedit-show-help-p t
-  "whether to pop up the help-buffer.."
+  "Whether to pop up the help-buffer.."
   :type 'boolean
   :group 'miniedit)
 
@@ -228,7 +210,7 @@ when eval'ed."
  
 ;;;###autoload
 (defun miniedit ()
-  "The main function."
+  "The main miniedit function."
   (interactive)
   (let ((miniedit-string miniedit-string)
 	(minibufname (buffer-name))
@@ -305,7 +287,9 @@ version 21 or higher only.."
 
 ;; silence the compiler:
 (defun miniedit-mode (&rest arg)
-  nil)
+  "Miniedit mode.
+Optional argument ARG is ignored."
+nil)
 
 (defun miniedit-recursive-edit (msg &optional content)
   "Enter recursive edit to permit a user to edit long contents..
@@ -353,7 +337,7 @@ Optimized for being called when the current buffer is a minibuffer.."
 		    ;;(delete-window (get-buffer-window "*Miniedit*"))
 		    (kill-buffer "*Miniedit*")
 		    )))
-	    (when 
+	    (when
 		(get-buffer "*Miniedit Help*")
 	      (kill-buffer "*Miniedit Help*")))))
       (unless (stringp new-content)
@@ -427,6 +411,8 @@ Optimized for being called when the current buffer is not a minibuffer.."
   
 
 (defun miniedit-show-help (&rest args)
+  "Show help.
+Optional argument ARGS will be ignored."
   (when miniedit-show-help-p
     (with-output-to-temp-buffer "*Miniedit Help*"
       (apply 'miniedit-princ-list
